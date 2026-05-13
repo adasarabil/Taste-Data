@@ -17,6 +17,8 @@ Claude receives the deterministic sensory profile and compact origin/fusion cont
 
 The app also renders origin/cuisine context in its own Origin tab. This tab shows the detected dish family, confidence, weighted cuisine or region influences, source status, risk flags, music bias, and any external Wikidata evidence returned during the lookup. The app treats this as cuisine and cultural-origin context, not as human ethnicity.
 
+Curated matches have priority over generic heuristics. For example, a named hybrid such as `Korean taco` keeps the curated `Korean-Mexican taco fusion` label while still being marked as contemporary fusion. Generic fusion and fine-dining heuristics are used only to enrich or interpret cases where a more specific curated variant is not already available.
+
 ## Project Structure
 
 ```text

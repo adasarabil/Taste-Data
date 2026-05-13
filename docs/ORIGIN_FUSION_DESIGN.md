@@ -67,6 +67,8 @@ assets/external-food-data.js
 
 The current resolver is curated-first. It recognizes a starter set of dish families and variants, including tacos, dumplings/filled dough, and soups. It produces rounded ownership percentages that always sum to 100.
 
+Curated variants are preserved when the user writes explicit fusion language. For example, `Korean taco` should keep the `Korean-Mexican taco fusion` variant instead of being flattened into a generic 50/50 Korean and Mexican split. The generic fusion/fine-dining heuristic should only reshape ownership when a specific curated variant is not already doing that job, or when fine-dining context intentionally asks for an interpretive blend.
+
 When curated confidence is low or extra evidence is useful, the resolver can use Wikidata live lookup as a broad dataset path. The app queries Wikidata search/entity APIs, extracts cuisine, country-of-origin, and class claims, then merges that compact evidence into the origin/fusion profile. It does not send the full dataset to Claude.
 
 The hybrid plan remains:
@@ -104,6 +106,7 @@ Example record:
 
 - Origin may enrich prompts, but must not override measured mappings.
 - Place eaten is separate from origin. A taco eaten in Istanbul should preserve Mexican origin context and Istanbul place context separately.
+- Specific curated fusion variants should be preserved ahead of broad token-based fusion heuristics.
 - Fusion should blend weighted influences instead of choosing a single winner.
 - If origin is disputed or uncertain, the UI and prompt context should say so.
 - Avoid stereotypes and caricature. Use musical structure terms: rhythm density, ornamentation, acoustic/electronic bias, ensemble size, space, repetition, syncopation.

@@ -32,6 +32,8 @@ Implemented:
 - endpoint selection for custom globals, Netlify, Vercel, and query overrides
 - stricter schema repair with warnings
 - curated-first origin/fusion inference with compact Wikidata enrichment
+- visible Origin tab for source, confidence, weighted cuisine/region influences, risk flags, and external evidence
+- curated fusion preservation so named hybrids keep specific variants before generic fusion heuristics run
 - shared Claude proxy configuration in `api/claude-config.cjs`
 
 Write scope:

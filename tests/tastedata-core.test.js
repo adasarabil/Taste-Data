@@ -195,6 +195,8 @@ const tacoFusion = inferOriginFusion({
 });
 assert.equal(tacoFusion.dishFamily, 'taco');
 assert.equal(tacoFusion.fusionMode, 'contemporary-fusion');
+assert.equal(tacoFusion.ownership[0].label, 'Korean-Mexican taco fusion');
+assert.equal(tacoFusion.ownership[0].cuisine, 'Korean-Mexican');
 assert.equal(tacoFusion.ownership.reduce((sum, item) => sum + item.ownership, 0), 100);
 
 const outputWithOrigin = buildLocalOutput({ dishName: 'Mantı' }, balancedSoup, mantiOrigin);

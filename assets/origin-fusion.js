@@ -83,6 +83,19 @@ function inferFineDiningFusion(input, baseProfile) {
   var tokens = cuisineTokensFromInput(input);
 
   if (!fineDining && !explicitFusion && tokens.length < 2) return baseProfile;
+  if (explicitFusion && !fineDining && baseProfile.status === 'matched' && baseProfile.ownership && baseProfile.ownership.length) {
+    return {
+      status: baseProfile.status,
+      dishFamily: baseProfile.dishFamily,
+      inferredFrom: baseProfile.inferredFrom + '+fusion-context',
+      originConfidence: baseProfile.originConfidence,
+      ownership: baseProfile.ownership,
+      fusionMode: 'contemporary-fusion',
+      musicBias: baseProfile.musicBias,
+      riskFlags: Array.from(new Set((baseProfile.riskFlags || []).concat(['fusion_claim']))),
+      sourcePlan: baseProfile.sourcePlan
+    };
+  }
   if (tokens.length < 2 && baseProfile.ownership && baseProfile.ownership.length) {
     tokens = baseProfile.ownership.slice(0, 2).map(function(item) { return item.cuisine; }).filter(Boolean);
   }

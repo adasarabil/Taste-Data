@@ -48,6 +48,7 @@ The project is a static single-page app with serverless Claude proxy functions f
 The user enters dish data. The app maps the six food parameters into music-production concepts, sends the result to Claude, and renders Suno-ready outputs:
 
 - dish interpretation
+- origin/cuisine evidence tab
 - complexity classification
 - six parameter mapping rows
 - six single-parameter stem prompts
@@ -67,7 +68,7 @@ The user enters dish data. The app maps the six food parameters into music-produ
 ## Improvements Implemented
 
 - Added deterministic client-side sensory mapping in `assets/taste-profile.js`.
-- Added local normalization, clamping, range warnings, derived axes, genre scoring, complexity scoring, and local fallback output.
+- Added local normalization, clamping, range warnings, derived axes, complexity scoring, and local fallback output.
 - Added schema repair for Claude JSON so the UI still receives six mapping rows and six stems.
 - Added deterministic fallback when Claude/API is unavailable.
 - Hardened Netlify and Vercel Claude proxy handlers by whitelisting request fields and fixing the model server-side.
@@ -79,6 +80,8 @@ The user enters dish data. The app maps the six food parameters into music-produ
 - Added `docs/ORIGIN_FUSION_DESIGN.md` as a planning document for future cultural-origin logic.
 - Added a curated-first hybrid origin/fusion resolver that infers dish family, rounded cuisine ownership percentages, fusion mode, and music bias without changing the six sensor mappings.
 - Added Wikidata live lookup as the broad dataset path for dish/cuisine/origin evidence, with local caching and compact profile merging.
+- Added a dedicated Origin tab so provenance, weighted cuisine/region context, risk flags, and Wikidata evidence are visible separately from Claude prose.
+- Fixed curated fusion handling so named hybrids such as Korean taco keep their specific curated variant instead of being overwritten by the generic fusion heuristic.
 
 ## Better Parts Taken From Legacy Project
 
