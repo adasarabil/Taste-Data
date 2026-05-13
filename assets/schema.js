@@ -24,6 +24,7 @@ function buildLocalOutput(input, profile, originProfile) {
     production: 'keep cultural references minimal'
   };
   return {
+    originProfile: originProfile || null,
     dishInterpretation: dishName + ' becomes an instrumental composition where mass shapes bass, pH shapes lead color, temperature shapes tempo, TDS shapes percussion, color shapes pads, and place shapes space. Origin/fusion context: ' + originLine + '.',
     complexityLevel: profile.complexityLevel,
     complexityExplanation: profile.complexityExplanation + ' Cultural context is used as style enrichment only, not as an extra sensor.',
@@ -54,6 +55,10 @@ function validateOutputWithWarnings(output, fallback) {
       warnings.push('Repaired missing ' + key + '.');
     }
   });
+
+  if (!repaired.originProfile && fallback.originProfile) {
+    repaired.originProfile = fallback.originProfile;
+  }
 
   if (!Array.isArray(repaired.mappingRows) || repaired.mappingRows.length !== TASTEDATA_OUTPUT_SCHEMA.rowCount) {
     repaired.mappingRows = fallback.mappingRows;

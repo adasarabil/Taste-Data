@@ -126,6 +126,7 @@
 
     <div class="tab-bar">
       <button class="tab-btn active" onclick="switchTab('interpretation')">Interpretation</button>
+      <button class="tab-btn" onclick="switchTab('origin')">Origin</button>
       <button class="tab-btn" onclick="switchTab('mapping')">Parameter Map</button>
       <button class="tab-btn" onclick="switchTab('stems')">Stems</button>
       <button class="tab-btn" onclick="switchTab('mix')">Mix Direction</button>
@@ -137,6 +138,10 @@
         <div class="label">Complexity Classification</div>
         <p id="complexityExpl"></p>
       </div>
+    </div>
+
+    <div class="tab-panel" id="tab-origin">
+      <div id="originContainer"></div>
     </div>
 
     <div class="tab-panel" id="tab-mapping">

@@ -15,6 +15,8 @@ The browser first derives a local sensory profile from those inputs, then resolv
 
 Claude receives the deterministic sensory profile and compact origin/fusion context, then returns JSON for the UI. If Claude is unavailable, if Wikidata cannot be reached, or if the AI response is incomplete, the local fallback and schema repair keep the output usable.
 
+The app also renders origin/cuisine context in its own Origin tab. This tab shows the detected dish family, confidence, weighted cuisine or region influences, source status, risk flags, music bias, and any external Wikidata evidence returned during the lookup. The app treats this as cuisine and cultural-origin context, not as human ethnicity.
+
 ## Project Structure
 
 ```text
@@ -44,8 +46,9 @@ tasteData2/
 2. `assets/taste-profile.js` validates and maps the six inputs into bass, lead, tempo, hi-hat, pad, and spatial layers.
 3. `assets/origin-fusion.js` uses `assets/origin-fusion-data.js` first, then `assets/external-food-data.js` can enrich uncertain cases with Wikidata evidence.
 4. `assets/schema.js` builds the deterministic fallback and repairs Claude output to the expected seven-part JSON shape.
-5. `assets/config.js` chooses the serverless endpoint.
-6. `api/claude.js` and `netlify/functions/claude.js` proxy Claude requests through the shared hardening rules in `api/claude-config.cjs`.
+5. `assets/app.js` renders the origin/cuisine profile separately from the musical parameter map, so the provenance data remains visible even if Claude rewrites the prose.
+6. `assets/config.js` chooses the serverless endpoint.
+7. `api/claude.js` and `netlify/functions/claude.js` proxy Claude requests through the shared hardening rules in `api/claude-config.cjs`.
 
 ## Local Preview
 

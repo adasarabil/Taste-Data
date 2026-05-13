@@ -199,7 +199,10 @@ assert.equal(tacoFusion.ownership.reduce((sum, item) => sum + item.ownership, 0)
 
 const outputWithOrigin = buildLocalOutput({ dishName: 'Mantı' }, balancedSoup, mantiOrigin);
 assert.equal(outputWithOrigin.mappingRows.length, 6);
+assert.equal(outputWithOrigin.originProfile.dishFamily, 'dumpling');
 assert.match(outputWithOrigin.dishInterpretation, /Origin\/fusion context/);
+const repairedOrigin = validateOutputWithWarnings({ mappingRows: [], stems: [] }, outputWithOrigin);
+assert.equal(repairedOrigin.output.originProfile.dishFamily, 'dumpling');
 
 const fineDiningFusion = inferOriginFusion({
   dishName: 'Chef tasting dumpling',

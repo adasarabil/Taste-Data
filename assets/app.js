@@ -165,11 +165,77 @@ function showError(msg) {
   el.className = 'error-box visible';
 }
 
+function sourceLabel(profile) {
+  if (!profile) return 'No origin context available';
+  if (profile.externalEvidence) return 'Curated dataset + Wikidata';
+  if ((profile.riskFlags || []).indexOf('external_lookup_failed') !== -1) return 'Curated dataset; Wikidata unavailable';
+  return profile.inferredFrom || 'Curated dataset';
+}
+
+function renderOriginProfile(profile) {
+  var container = document.getElementById('originContainer');
+  if (!container) return;
+
+  if (!profile) {
+    container.innerHTML = '<p class="origin-empty">No origin or cuisine context was inferred for this dish.</p>';
+    return;
+  }
+
+  var ownership = profile.ownership || [];
+  var ownershipHtml = ownership.length ? ownership.map(function(item) {
+    return '<div class="origin-ownership-row">' +
+      '<div><span class="origin-name">' + esc(item.label) + '</span><span class="origin-cuisine">' + esc(item.cuisine) + '</span></div>' +
+      '<span class="origin-percent">' + esc(item.ownership) + '%</span>' +
+      '</div>';
+  }).join('') : '<p class="origin-empty">No weighted cuisine or region ownership found.</p>';
+
+  var riskFlags = (profile.riskFlags || []).map(function(flag) {
+    return '<span class="origin-chip">' + esc(flag) + '</span>';
+  }).join('');
+
+  var evidence = profile.externalEvidence;
+  var evidenceHtml = evidence ? '<div class="origin-card">' +
+    '<div class="origin-card-label">External Evidence</div>' +
+    '<div class="origin-kv"><span>Provider</span><strong>' + esc(evidence.provider) + '</strong></div>' +
+    '<div class="origin-kv"><span>Item</span><strong>' + esc(evidence.label || evidence.itemId) + '</strong></div>' +
+    '<div class="origin-note">' + esc(evidence.description || 'No description returned.') + '</div>' +
+    '<div class="origin-evidence-list">' +
+    (evidence.cuisineLabels || []).map(function(label) { return '<span>Cuisine: ' + esc(label) + '</span>'; }).join('') +
+    (evidence.originLabels || []).map(function(label) { return '<span>Origin: ' + esc(label) + '</span>'; }).join('') +
+    (evidence.typeLabels || []).map(function(label) { return '<span>Type: ' + esc(label) + '</span>'; }).join('') +
+    '</div></div>' : '<div class="origin-card"><div class="origin-card-label">External Evidence</div><p class="origin-empty">Wikidata did not add usable evidence in this run.</p></div>';
+
+  container.innerHTML =
+    '<div class="origin-grid">' +
+      '<div class="origin-card">' +
+        '<div class="origin-card-label">Detected Context</div>' +
+        '<div class="origin-kv"><span>Status</span><strong>' + esc(profile.status || 'unknown') + '</strong></div>' +
+        '<div class="origin-kv"><span>Dish family</span><strong>' + esc(profile.dishFamily || 'unknown') + '</strong></div>' +
+        '<div class="origin-kv"><span>Confidence</span><strong>' + esc(profile.originConfidence || 'unknown') + '</strong></div>' +
+        '<div class="origin-kv"><span>Fusion mode</span><strong>' + esc(profile.fusionMode || 'unknown') + '</strong></div>' +
+        '<div class="origin-kv"><span>Source</span><strong>' + esc(sourceLabel(profile)) + '</strong></div>' +
+      '</div>' +
+      '<div class="origin-card">' +
+        '<div class="origin-card-label">Cuisine / Region Weights</div>' +
+        ownershipHtml +
+      '</div>' +
+      evidenceHtml +
+      '<div class="origin-card">' +
+        '<div class="origin-card-label">Music Bias</div>' +
+        '<div class="origin-note">' + esc(profile.musicBias && profile.musicBias.rhythm || 'neutral contextual pulse') + '</div>' +
+        '<div class="origin-note">' + esc(profile.musicBias && profile.musicBias.instrumentation || 'no specific cultural instrumentation inferred') + '</div>' +
+        '<div class="origin-note">' + esc(profile.musicBias && profile.musicBias.production || 'keep cultural references minimal') + '</div>' +
+        '<div class="origin-chips">' + (riskFlags || '<span class="origin-chip">no risk flags</span>') + '</div>' +
+      '</div>' +
+    '</div>';
+}
+
 function renderOutput(d, dishName) {
   document.getElementById('outputDishName').textContent = dishName;
   document.getElementById('complexityBadge').textContent = d.complexityLevel || '';
   document.getElementById('interpretationText').textContent = d.dishInterpretation || '';
   document.getElementById('complexityExpl').textContent = d.complexityExplanation || '';
+  renderOriginProfile(d.originProfile);
 
   var tbody = document.getElementById('mappingBody');
   tbody.innerHTML = '';
