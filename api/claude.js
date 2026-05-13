@@ -1,7 +1,13 @@
 const https = require('https');
+const {
+  CLAUDE_ENDPOINT_CONFIG,
+  parseJsonBody,
+  validateClaudeRequest,
+  buildSafeClaudePayload
+} = require('./claude-config.cjs');
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN || '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
 
@@ -18,17 +24,34 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'API key not configured.' });
   }
 
-  const body = JSON.stringify(req.body);
+  const contentLength = Number(req.headers['content-length'] || 0);
+  if (contentLength > 64000) {
+    return res.status(413).json({ error: 'Request body too large.' });
+  }
+
+  const parsedBody = parseJsonBody(req.body || {});
+  if (parsedBody.error) {
+    return res.status(400).json({ error: parsedBody.error });
+  }
+
+  const validated = validateClaudeRequest(parsedBody.value);
+  if (validated.error) {
+    return res.status(400).json({ error: validated.error });
+  }
+
+  const safePayload = buildSafeClaudePayload(validated.value);
+
+  const body = JSON.stringify(safePayload);
 
   return new Promise((resolve) => {
     const options = {
-      hostname: 'api.anthropic.com',
-      path: '/v1/messages',
+      hostname: CLAUDE_ENDPOINT_CONFIG.hostname,
+      path: CLAUDE_ENDPOINT_CONFIG.path,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
+        'anthropic-version': CLAUDE_ENDPOINT_CONFIG.anthropicVersion,
         'Content-Length': Buffer.byteLength(body)
       }
     };

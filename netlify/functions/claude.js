@@ -1,8 +1,15 @@
 const https = require('https');
+const {
+  CLAUDE_ENDPOINT_CONFIG,
+  parseJsonBody,
+  validateClaudeRequest,
+  buildSafeClaudePayload
+} = require('../../api/claude-config.cjs');
 
 exports.handler = async function(event, context) {
+  const allowedOrigin = process.env.ALLOWED_ORIGIN || '*';
   const headers = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json'
@@ -25,17 +32,45 @@ exports.handler = async function(event, context) {
     };
   }
 
+  if ((event.body || '').length > 64000) {
+    return {
+      statusCode: 413,
+      headers,
+      body: JSON.stringify({ error: 'Request body too large.' })
+    };
+  }
+
+  const parsedBody = parseJsonBody(event.body);
+  if (parsedBody.error) {
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({ error: parsedBody.error })
+    };
+  }
+
+  const validated = validateClaudeRequest(parsedBody.value);
+  if (validated.error) {
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({ error: validated.error })
+    };
+  }
+
+  const safePayload = buildSafeClaudePayload(validated.value);
+
   return new Promise((resolve) => {
-    const body = event.body;
+    const body = JSON.stringify(safePayload);
     
     const options = {
-      hostname: 'api.anthropic.com',
-      path: '/v1/messages',
+      hostname: CLAUDE_ENDPOINT_CONFIG.hostname,
+      path: CLAUDE_ENDPOINT_CONFIG.path,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
+        'anthropic-version': CLAUDE_ENDPOINT_CONFIG.anthropicVersion,
         'Content-Length': Buffer.byteLength(body)
       }
     };

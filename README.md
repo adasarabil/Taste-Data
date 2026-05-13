@@ -1,62 +1,121 @@
-# TasteData — Deploy Guide
+# TasteData
 
-## Netlify'a deploy et (ücretsiz, 5 dakika)
+TasteData is a buildless web app that translates measured food data into structured, Suno-ready instrumental music prompts. It combines deterministic client-side mapping with a Claude serverless proxy, so the system stays explainable even when live AI generation is unavailable.
 
-### 1. GitHub'a yükle
-Bu 3 dosyayı bir GitHub reposuna koy:
-```
-tastedata/
-├── index.html
-├── netlify.toml
-└── netlify/
-    └── functions/
-        └── claude.js
-```
+The current system deliberately preserves six inputs:
 
-### 2. Netlify'a bağla
-1. https://app.netlify.com → "Add new site" → "Import an existing project"
-2. GitHub reposunu seç
-3. Build settings otomatik gelir (netlify.toml'dan okur)
-4. "Deploy site" tıkla
+- Weight / Mass
+- pH
+- Temperature
+- Salinity / TDS
+- Dominant Color
+- Place Where the Dish Is Eaten
 
-### 3. API key ekle
-1. Netlify dashboard → Site → "Environment variables"
-2. Yeni değişken ekle:
-   - Key: `ANTHROPIC_API_KEY`
-   - Value: `sk-ant-...` (Anthropic API key'in)
-3. "Save" → "Trigger deploy"
+The browser first derives a local sensory profile from those inputs, then resolves a cultural origin/fusion profile from dish name, cuisine, description, and notes. Origin/fusion is context only: it can enrich rhythm, instrumentation, and production language, but it does not become a seventh sensor and it cannot override the six measured mappings.
 
-### 4. Link paylaş
-Deploy tamamlandığında Netlify sana bir link verir:
-`https://tastedata-xyz.netlify.app`
+Claude receives the deterministic sensory profile and compact origin/fusion context, then returns JSON for the UI. If Claude is unavailable, if Wikidata cannot be reached, or if the AI response is incomplete, the local fallback and schema repair keep the output usable.
 
-Bu linki herkesle paylaşabilirsin. API key backend'de gizli kalır.
+## Project Structure
 
----
-
-## Alternatif: Vercel
-
-Vercel kullanmak istersen `netlify/functions/claude.js` yerine `api/claude.js` oluştur, içerik aynı ama export formatı farklı:
-
-```js
-export default async function handler(req, res) {
-  // CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  if (req.method === 'OPTIONS') { res.status(200).end(); return; }
-
-  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify(req.body)
-  });
-  const data = await response.json();
-  res.status(response.status).json(data);
-}
+```text
+tasteData2/
+|-- index.html
+|-- assets/
+|   |-- styles.css
+|   |-- config.js
+|   |-- taste-profile.js
+|   |-- origin-fusion-data.js
+|   |-- origin-fusion.js
+|   |-- external-food-data.js
+|   |-- schema.js
+|   `-- app.js
+|-- api/claude.js
+|-- api/claude-config.cjs
+|-- netlify/functions/claude.js
+|-- tests/tastedata-core.test.js
+|-- docs/
+|-- presentation/
+`-- netlify.toml
 ```
 
-Ve `index.html` içinde `/api/claude` zaten doğru path.
+## Runtime Flow
+
+1. `assets/app.js` collects form input and coordinates generation.
+2. `assets/taste-profile.js` validates and maps the six inputs into bass, lead, tempo, hi-hat, pad, and spatial layers.
+3. `assets/origin-fusion.js` uses `assets/origin-fusion-data.js` first, then `assets/external-food-data.js` can enrich uncertain cases with Wikidata evidence.
+4. `assets/schema.js` builds the deterministic fallback and repairs Claude output to the expected seven-part JSON shape.
+5. `assets/config.js` chooses the serverless endpoint.
+6. `api/claude.js` and `netlify/functions/claude.js` proxy Claude requests through the shared hardening rules in `api/claude-config.cjs`.
+
+## Local Preview
+
+The UI can be opened directly from `index.html`, but live Claude generation needs a serverless runtime and an Anthropic API key. Without the key, the deterministic local output still renders.
+
+Static-only preview:
+
+```bash
+npx serve .
+```
+
+Netlify function preview:
+
+```bash
+netlify dev
+```
+
+Vercel function preview:
+
+```bash
+vercel dev
+```
+
+Required environment variable:
+
+```text
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+Optional production CORS setting:
+
+```text
+ALLOWED_ORIGIN=https://your-site.example
+```
+
+## Endpoint Selection
+
+The frontend selects the Claude endpoint in this order:
+
+1. `window.TASTEDATA_API_ENDPOINT`
+2. query override: `?api=/api/claude`
+3. Vercel host: `/api/claude`
+4. default Netlify path: `/.netlify/functions/claude`
+
+`window.TASTEDATA_API_ENDPOINT` is useful for embedded demos or custom hosting. The query override is useful for local previews and quick endpoint tests.
+
+## Deploy To Netlify
+
+1. Connect the repository in Netlify.
+2. Keep `netlify.toml` as the build configuration.
+3. Add `ANTHROPIC_API_KEY` in Site settings -> Environment variables.
+4. Optionally set `ALLOWED_ORIGIN` to the production site URL.
+5. Deploy.
+
+## Deploy To Vercel
+
+The Vercel handler is available at `api/claude.js`. On a `*.vercel.app` host, the frontend automatically uses `/api/claude`. Add the same `ANTHROPIC_API_KEY` environment variable in Vercel project settings.
+
+## Tests
+
+```bash
+node tests/tastedata-core.test.js
+node --check assets/app.js
+node --check assets/config.js
+node --check assets/taste-profile.js
+node --check assets/origin-fusion-data.js
+node --check assets/origin-fusion.js
+node --check assets/external-food-data.js
+node --check assets/schema.js
+node --check api/claude-config.cjs
+node --check netlify/functions/claude.js
+node --check api/claude.js
+```
